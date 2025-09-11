@@ -121,7 +121,7 @@ import React, { useRef, useState } from 'react';
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
-
+  import { useAuth } from '../Context/Auth/AuthContext';
 const LoginPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -132,6 +132,7 @@ const LoginPage = () => {
   const passwordRef = useRef();
 
   const navigate = useNavigate();
+  const {login} = useAuth();
 
   function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -189,6 +190,7 @@ const LoginPage = () => {
       setError(`Network error: ${err.message}`);
     }
     setIsLoading(false);
+    login(Email, Password);
   };
 
   // Animation variants
@@ -435,6 +437,7 @@ const LoginPage = () => {
               >
                 <CheckCircle className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm">Login successful! Redirecting...</span>
+              
               </motion.div>
             )}
 

@@ -262,6 +262,7 @@ import React, { useRef, useState } from 'react';
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import {useAuth} from '../Context/Auth/AuthContext';
 // import { useAuth } from '../Context/Auth/AuthContext';
 
 const RegisterPage = () => {
@@ -274,7 +275,7 @@ const RegisterPage = () => {
   const lastNameRef = useRef();
   const emailRef = useRef();
   const passwordRef = useRef();
-
+  const {register} = useAuth();
   const navigate = useNavigate();
 
   function isValidEmail(email) {
@@ -335,6 +336,7 @@ const RegisterPage = () => {
       setError(`Network error: ${err.message}`);
     }
     setIsLoading(false);
+    register(FirstName, LastName, Email, Password);
   };
 
   // Animation variants
