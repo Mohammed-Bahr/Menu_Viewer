@@ -278,11 +278,73 @@ const RegisterPage = () => {
   const {register} = useAuth();
   const navigate = useNavigate();
 
-  function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
+  // function isValidEmail(email) {
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   return emailRegex.test(email);
+  // }
 
+  function isValidEmail(email) {
+    if (!email) {
+        return { isValid: false, error: "Email is required" };
+    }
+    
+    if (typeof email !== 'string') {
+        return { isValid: false, error: "Email must be a string" };
+    }
+
+    email = email.trim();
+
+    if (email.length === 0) {
+        return { isValid: false, error: "Email cannot be empty" };
+    }
+
+    if (email.length > 254) {
+        return { isValid: false, error: "Email is too long (max 254 characters)" };
+    }
+
+    if (!email.includes('@')) {
+        return { isValid: false, error: "Email must contain @ symbol" };
+    }
+
+    const atCount = (email.match(/@/g) || []).length;
+    if (atCount !== 1) {
+        return { isValid: false, error: "Email must contain exactly one @ symbol" };
+    }
+
+    const [localPart, domainPart] = email.split('@');
+
+    if (localPart.length === 0) {
+        return { isValid: false, error: "Email must have content before @" };
+    }
+
+    if (localPart.length > 64) {
+        return { isValid: false, error: "Email local part is too long (max 64 characters)" };
+    }
+
+    if (domainPart.length === 0) {
+        return { isValid: false, error: "Email must have domain after @" };
+    }
+
+    if (!domainPart.includes('.')) {
+        return { isValid: false, error: "Email domain must contain at least one dot" };
+    }
+
+    if (localPart.startsWith('.') || localPart.endsWith('.')) {
+        return { isValid: false, error: "Email cannot start or end with a dot before @" };
+    }
+
+    if (localPart.includes('..')) {
+        return { isValid: false, error: "Email cannot contain consecutive dots" };
+    }
+
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    
+    if (!emailRegex.test(email)) {
+        return { isValid: false, error: "Email format is invalid" };
+    }
+
+    return { isValid: true, error: null };
+}
   const onSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);

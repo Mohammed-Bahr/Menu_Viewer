@@ -46,6 +46,8 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({data:null , success:false , message: `here is the error ->${error.message}`  });
   }
 });
+
+// GET a single user by Email
 router.get('/email/:email', async (req, res) => {
   try {
     const email = req.params.email;
