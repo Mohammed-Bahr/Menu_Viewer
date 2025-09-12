@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Clock, Users, ChefHat, Search, Filter } from 'lucide-react';
-
+import { useNavigate } from 'react-router-dom';
 const FavouritesPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,7 +8,7 @@ const FavouritesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('title');
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetchFavorites();
   }, []);
@@ -16,7 +16,8 @@ const FavouritesPage = () => {
   const fetchFavorites = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/recipes/favourites' , {
+      const response = await fetch('http://localhost:3000/recipes/filter/favourites', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -25,9 +26,40 @@ const FavouritesPage = () => {
         throw new Error('Failed to fetch favorites');
       }
       const data = await response.json();
-      setFavorites(data);
+      console.log('API Response:', data); // Log the response for debugging
+
+      // Handle different response formats
+      let favoritesData = [];
+
+      if (data && data.success === true && Array.isArray(data.data)) {
+        // Standard API response format with success flag and data array
+        favoritesData = data.data;
+      } else if (data && Array.isArray(data.data)) {
+        // API response with data property containing array
+        favoritesData = data.data;
+      } else if (Array.isArray(data)) {
+        // Direct array response
+        favoritesData = data;
+      } else {
+        // Unexpected format - log and use empty array
+        console.error('Unexpected API response format:', data);
+      }
+
+      // Ensure each recipe has required properties
+      const validatedFavorites = favoritesData.map(recipe => ({
+        ...recipe,
+        title: recipe.title || 'Untitled Recipe',
+        category: recipe.category || 'Uncategorized',
+        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+        cookingTime: recipe.cookingTime || 0,
+        imageUrl: recipe.imageUrl || ''
+      }));
+
+      setFavorites(validatedFavorites);
     } catch (err) {
+      console.error('Error fetching favorites:', err);
       setError(err.message);
+      setFavorites([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -42,7 +74,7 @@ const FavouritesPage = () => {
           : recipe
       )
     );
-    
+
     try {
       // You might want to implement an API call to update the favorite status
       // await fetch(`http://localhost:3000/recipes/${recipeId}/favorite`, { method: 'PATCH' });
@@ -59,25 +91,69 @@ const FavouritesPage = () => {
     }
   };
 
-  const filteredAndSortedFavorites = favorites
-    .filter(recipe => 
-      recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedCategory === 'all' || recipe.category === selectedCategory)
-    )
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'cookingTime':
-          return a.cookingTime - b.cookingTime;
-        case 'category':
-          return a.category.localeCompare(b.category);
-        default:
-          return 0;
+  const filteredAndSortedFavorites = (() => {
+    // First check if favorites is an array
+    if (!Array.isArray(favorites)) {
+      console.warn('favorites is not an array:', favorites);
+      return [];
+    }
+
+    // Filter recipes
+    const filtered = favorites.filter(recipe => {
+      // Check if recipe is a valid object
+      if (!recipe || typeof recipe !== 'object') {
+        return false;
       }
+
+      // Check title match
+      const titleMatches = recipe.title &&
+        typeof recipe.title === 'string' &&
+        recipe.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Check category match
+      const categoryMatches = selectedCategory === 'all' ||
+        (recipe.category && recipe.category === selectedCategory);
+
+      return titleMatches && categoryMatches;
     });
 
-  const categories = [...new Set(favorites.map(recipe => recipe.category))];
+    // Sort recipes
+    return filtered.sort((a, b) => {
+      try {
+        switch (sortBy) {
+          case 'title':
+            return typeof a.title === 'string' && typeof b.title === 'string'
+              ? a.title.localeCompare(b.title || '')
+              : 0;
+          case 'cookingTime':
+            return (Number(a.cookingTime) || 0) - (Number(b.cookingTime) || 0);
+          case 'category':
+            return typeof a.category === 'string' && typeof b.category === 'string'
+              ? (a.category || '').localeCompare(b.category || '')
+              : 0;
+          default:
+            return 0;
+        }
+      } catch (err) {
+        console.error('Error sorting recipes:', err);
+        return 0;
+      }
+    });
+  })();
+
+  const categories = (() => {
+    if (!Array.isArray(favorites)) {
+      return [];
+    }
+
+    // Filter out recipes without a valid category
+    const validRecipes = favorites.filter(recipe =>
+      recipe && typeof recipe === 'object' && recipe.category && typeof recipe.category === 'string'
+    );
+
+    // Extract unique categories
+    return [...new Set(validRecipes.map(recipe => recipe.category))];
+  })();
 
   if (loading) {
     return (
@@ -109,7 +185,7 @@ const FavouritesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+    <div className="mt-12 min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -182,7 +258,7 @@ const FavouritesPage = () => {
               {searchTerm || selectedCategory !== 'all' ? 'No matching recipes found' : 'No favorites yet'}
             </h3>
             <p className="text-gray-500">
-              {searchTerm || selectedCategory !== 'all' 
+              {searchTerm || selectedCategory !== 'all'
                 ? 'Try adjusting your search or filter criteria'
                 : 'Start exploring recipes and add them to your favorites!'
               }
@@ -193,6 +269,8 @@ const FavouritesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAndSortedFavorites.map((recipe) => (
               <div
+                onClick={() => navigate(`/recipes/${recipe._id}`)}
+                role="button"
                 key={recipe._id}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
               >
@@ -212,14 +290,13 @@ const FavouritesPage = () => {
                     className="absolute top-3 right-3 p-2 rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 transition-all duration-200 group"
                   >
                     <Heart
-                      className={`h-5 w-5 transition-all duration-200 ${
-                        recipe.isLoved
-                          ? 'text-red-500 fill-current'
-                          : 'text-gray-400 group-hover:text-red-500'
-                      }`}
+                      className={`h-5 w-5 transition-all duration-200 ${recipe.isLoved
+                        ? 'text-red-500 fill-current'
+                        : 'text-gray-400 group-hover:text-red-500'
+                        }`}
                     />
                   </button>
-                  
+
                   {/* Category Badge */}
                   <div className="absolute top-3 left-3">
                     <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
@@ -233,7 +310,7 @@ const FavouritesPage = () => {
                   <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
                     {recipe.title}
                   </h3>
-                  
+
                   {recipe.description && (
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                       {recipe.description}
@@ -272,7 +349,9 @@ const FavouritesPage = () => {
                   </div>
 
                   {/* View Recipe Button */}
-                  <button className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 font-medium">
+                  <button
+
+                    className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 font-medium">
                     View Recipe
                   </button>
                 </div>

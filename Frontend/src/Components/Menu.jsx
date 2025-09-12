@@ -308,7 +308,7 @@ const Menu = () => {
                 {filteredAndSortedRecipes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredAndSortedRecipes.map(recipe => (
-                            <button
+                            <div
                                 onClick={(e) => {
                                     e.preventDefault();
                                     navigate(`/recipe/${recipe._id}`);
@@ -379,7 +379,7 @@ const Menu = () => {
                                         View Full Recipe
                                     </button>
                                 </div>
-                            </button>
+                            </div>
                         ))}
                     </div>
                 ) : (

@@ -15,16 +15,16 @@
 //         setLoading(true);
 //         setError(null); // Reset error state on new fetch
 //         const response = await fetch(`http://localhost:3000/recipes/${id}`);
-        
+
 //         // FIX 1: Explicitly handle 404 "Not Found" errors separately.
 //         if (response.status === 404) {
 //           throw new Error('Recipe not found');
 //         }
-        
+
 //         if (!response.ok) {
 //           throw new Error(`HTTP error! status: ${response.status}`);
 //         }
-        
+
 //         const data = await response.json();
 //         setRecipe(data.data || data);
 //         setIsFavorited((JSON.stringify(data.data.isLoved)))
@@ -137,7 +137,7 @@
 //               <ArrowLeft className="w-5 h-5" />
 //               <span>Back to Recipes</span>
 //             </button>
-            
+
 //             <div className="flex items-center gap-3">
 //               <button
 //                 onClick={() => setIsFavorited(!isFavorited)}
@@ -156,7 +156,7 @@
 //               >
 //                 <Share2 className="w-5 h-5" />
 //               </button>
-              
+
 //               <button
 //                 onClick={() => setShowDebugView(!showDebugView)}
 //                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -311,16 +311,21 @@ const RecipeDisplayPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`http://localhost:3000/recipes/${id}`);
-        
+        const response = await fetch(`http://localhost:3000/recipes/${id}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+
+        });
+
         if (response.status === 404) {
           throw new Error('Recipe not found');
         }
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         setRecipe(data.data || data);
         // Fix: Properly set the favorite state from database
@@ -384,10 +389,10 @@ const RecipeDisplayPage = () => {
       }
 
       const updatedData = await response.json();
-      
+
       // Update local state
       setIsFavorited(newFavoriteState);
-      
+
       // Update recipe object to keep data in sync
       setRecipe(prev => ({
         ...prev,
@@ -395,7 +400,7 @@ const RecipeDisplayPage = () => {
       }));
 
       console.log('Favorite status updated successfully:', updatedData);
-      
+
     } catch (error) {
       console.error('Error updating favorite status:', error);
       // Show user-friendly error message
@@ -478,15 +483,14 @@ const RecipeDisplayPage = () => {
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Recipes</span>
             </button>
-            
+
             <div className="flex items-center gap-3">
               {/* UPDATED: Favorite button with database integration */}
               <button
                 onClick={toggleFavorite}
                 disabled={isUpdatingFavorite}
-                className={`p-2 rounded-full transition-colors favorite-button relative ${
-                  isFavorited ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
-                } hover:bg-opacity-80 ${isUpdatingFavorite ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 rounded-full transition-colors favorite-button relative ${isFavorited ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
+                  } hover:bg-opacity-80 ${isUpdatingFavorite ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
               >
                 {isUpdatingFavorite ? (
@@ -503,7 +507,7 @@ const RecipeDisplayPage = () => {
               >
                 <Share2 className="w-5 h-5" />
               </button>
-              
+
               <button
                 onClick={() => setShowDebugView(!showDebugView)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -531,7 +535,7 @@ const RecipeDisplayPage = () => {
         {error && recipe.title.includes("Sample Recipe") && (
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
             <p className="text-sm">
-              <strong>Note:</strong> Could not connect to the server ({error}). 
+              <strong>Note:</strong> Could not connect to the server ({error}).
               Showing a demo recipe instead.
             </p>
           </div>
@@ -544,7 +548,7 @@ const RecipeDisplayPage = () => {
               <h2 className="text-2xl font-bold text-gray-800">Recipe Data Structure</h2>
             </div>
             <pre className="p-6 text-sm bg-gray-900 text-green-400 overflow-auto rounded-lg">
-                {JSON.stringify(recipe, null, 2)}
+              {JSON.stringify(recipe, null, 2)}
             </pre>
           </div>
         ) : (
@@ -586,7 +590,7 @@ const RecipeDisplayPage = () => {
                   </div>
                 </div>
               )}
-              
+
               {recipe.servings && (
                 <div className="bg-white rounded-lg p-6 flex items-center gap-4">
                   <Users className="w-8 h-8 text-green-600" />
@@ -624,10 +628,10 @@ const RecipeDisplayPage = () => {
                 </div>
               </div>
 
-              {/* Instructions */}
+              {/* Instructions
               <div className="bg-white rounded-xl shadow-md p-8 instructions-section">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Instructions</h2>
-                <div className="space-y-4">
+                <div className="space-y-4 ">
                   {recipe.instructions?.length > 0 ? (
                     recipe.instructions.map((instruction, index) => (
                       <div key={index} className="flex gap-4">
@@ -643,6 +647,81 @@ const RecipeDisplayPage = () => {
                     <p className="text-gray-500">No instructions available.</p>
                   )}
                 </div>
+              </div> */}
+
+              {/* Instructions */}
+              <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">Step-by-Step Instructions</h2>
+                </div>
+
+                <div className="space-y-6">
+                  {recipe.instructions?.length > 0 ? (
+                    recipe.instructions.map((instruction, index) => (
+                      <div
+                        key={index}
+                        className="group relative flex gap-6 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border border-gray-100 hover:border-blue-200 hover:shadow-md"
+                      >
+                        {/* Step Number */}
+                        <div className="flex-shrink-0 relative">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300">
+                            {typeof instruction === 'object' ? instruction.step : index + 1}
+                          </div>
+                          {/* Connecting line for all steps except the last one */}
+                          {index < recipe.instructions.length - 1 && (
+                            <div className="absolute top-12 left-1/2 w-0.5 h-6 bg-gradient-to-b from-blue-300 to-gray-200 transform -translate-x-1/2"></div>
+                          )}
+                        </div>
+
+                        {/* Instruction Text */}
+                        <div className="flex-1 pt-2">
+                          <p className="text-gray-700 leading-relaxed text-base group-hover:text-gray-800 transition-colors duration-300">
+                            {typeof instruction === 'object' ? instruction.text : instruction}
+                          </p>
+
+                          {/* Optional: Add timing or difficulty indicators if available in your data */}
+                          {typeof instruction === 'object' && instruction.time && (
+                            <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="font-medium">~{instruction.time} minutes</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-lg">No instructions available for this recipe.</p>
+                      <p className="text-gray-400 text-sm mt-2">Instructions will help guide you through the cooking process.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional: Add a completion indicator */}
+                {recipe.instructions?.length > 0 && (
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <div className="flex items-center gap-3 text-green-600">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">You're all done! Enjoy your delicious meal! 🍽️</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
