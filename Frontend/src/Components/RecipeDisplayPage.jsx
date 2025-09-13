@@ -305,7 +305,7 @@ const RecipeDisplayPage = () => {
   const [showDebugView, setShowDebugView] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false); // Loading state for favorite toggle
-
+  // const [data , setData] = useState();
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
@@ -326,7 +326,7 @@ const RecipeDisplayPage = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
+       const data = (await response.json());
         setRecipe(data.data || data);
         // Fix: Properly set the favorite state from database
         setIsFavorited(Boolean(data.data?.isLoved || data?.isLoved));
@@ -628,32 +628,12 @@ const RecipeDisplayPage = () => {
                 </div>
               </div>
 
-              {/* Instructions
-              <div className="bg-white rounded-xl shadow-md p-8 instructions-section">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Instructions</h2>
-                <div className="space-y-4 ">
-                  {recipe.instructions?.length > 0 ? (
-                    recipe.instructions.map((instruction, index) => (
-                      <div key={index} className="flex gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                          {typeof instruction === 'object' ? instruction.step : index + 1}
-                        </div>
-                        <p className="text-gray-700 pt-1">
-                          {typeof instruction === 'object' ? instruction.text : instruction}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500">No instructions available.</p>
-                  )}
-                </div>
-              </div> */}
 
-              {/* Instructions */}
-              <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Instructions - FIXED VERSION */}
+              <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-gray-200">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
@@ -665,28 +645,28 @@ const RecipeDisplayPage = () => {
                     recipe.instructions.map((instruction, index) => (
                       <div
                         key={index}
-                        className="group relative flex gap-6 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border border-gray-100 hover:border-blue-200 hover:shadow-md"
+                        className="group relative flex gap-6 p-6 bg-white rounded-xl hover:bg-blue-50 transition-all duration-300 border border-gray-200 hover:border-blue-300 hover:shadow-lg mb-6"
                       >
-                        {/* Step Number */}
+                        {/* Step Number - Enhanced design */}
                         <div className="flex-shrink-0 relative">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300">
+                          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg group-hover:shadow-blue-200 group-hover:scale-105 transition-all duration-300">
                             {typeof instruction === 'object' ? instruction.step : index + 1}
                           </div>
                           {/* Connecting line for all steps except the last one */}
                           {index < recipe.instructions.length - 1 && (
-                            <div className="absolute top-12 left-1/2 w-0.5 h-6 bg-gradient-to-b from-blue-300 to-gray-200 transform -translate-x-1/2"></div>
+                            <div className="absolute top-14 left-1/2 w-1 h-10 bg-gradient-to-b from-blue-400 to-blue-100 transform -translate-x-1/2"></div>
                           )}
                         </div>
 
-                        {/* Instruction Text */}
-                        <div className="flex-1 pt-2">
-                          <p className="text-gray-700 leading-relaxed text-base group-hover:text-gray-800 transition-colors duration-300">
+                        {/* Instruction Text - Enhanced design with better spacing and typography */}
+                        <div className="flex-1 pt-1">
+                          <p className="text-gray-800 leading-relaxed text-lg group-hover:text-gray-900 transition-colors duration-300 break-words">
                             {typeof instruction === 'object' ? instruction.text : instruction}
                           </p>
 
                           {/* Optional: Add timing or difficulty indicators if available in your data */}
                           {typeof instruction === 'object' && instruction.time && (
-                            <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+                            <div className="mt-3 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full w-fit">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
@@ -698,23 +678,23 @@ const RecipeDisplayPage = () => {
                     ))
                   ) : (
                     <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                        <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <p className="text-gray-500 text-lg">No instructions available for this recipe.</p>
-                      <p className="text-gray-400 text-sm mt-2">Instructions will help guide you through the cooking process.</p>
+                      <p className="text-gray-700 text-xl font-medium mb-2">No instructions available</p>
+                      <p className="text-gray-500 text-base max-w-md mx-auto">This recipe doesn't include step-by-step instructions yet. Check back later for updates.</p>
                     </div>
                   )}
                 </div>
 
-                {/* Optional: Add a completion indicator */}
+                {/* Completion indicator */}
                 {recipe.instructions?.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <div className="flex items-center gap-3 text-green-600">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="mt-10 pt-6 border-t border-gray-200">
+                    <div className="flex items-center gap-4 text-green-600">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>

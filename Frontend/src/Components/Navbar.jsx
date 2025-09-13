@@ -8,7 +8,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [loveCount, setloveCount] = useState(3); // Replace with actual love count
+  // const [loveCount, setloveCount] = useState(3); // Replace with actual love count
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -135,7 +135,7 @@ export default function Navbar() {
                 }`}
             >
               <FavoriteBorderIcon size={20} />
-              {loveCount > 0 && (
+              {/* {loveCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -143,7 +143,7 @@ export default function Navbar() {
                 >
                   {loveCount > 9 ? "9+" : loveCount}
                 </motion.span>
-              )}
+              )} */}
             </motion.button>
 
             {/* User Menu */}
