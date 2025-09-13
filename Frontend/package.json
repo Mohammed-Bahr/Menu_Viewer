@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/styled": "^11.14.1",
     "@gsap/react": "^2.1.2",
+    "@mui/icons-material": "^7.3.2",
+    "@mui/styled-engine": "^7.3.2",
     "@tailwindcss/vite": "^4.1.13",
     "dotenv": "^17.2.2",
     "framer-motion": "^12.23.12",

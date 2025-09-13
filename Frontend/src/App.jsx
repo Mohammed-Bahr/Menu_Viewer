@@ -108,6 +108,7 @@ import SplitText from './Components/splitText'
 import AuthProvider from './Context/Auth/AuthProvider'
 import RecipeDisplayPage from './Components/RecipeDisplayPage'
 import UserProfile from './Components/UserProfile'
+import FavouritesPage from './pages/FavouritesPage'
 
 // Intro page component that shows SplitText and then navigates
 const IntroPage = () => {
@@ -203,7 +204,7 @@ const AnimatedRoutes = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/recipe/:id" element={<RecipeDisplayPage />} />
           <Route path="/profile/:email" element={<UserProfile />} />
-
+          <Route path="/favourites" element={<FavouritesPage />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -212,14 +213,13 @@ const AnimatedRoutes = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <div>
-        <BrowserRouter>
-          <AnimatedRoutes />
-        </BrowserRouter>
-      </div>
-    </AuthProvider>
-
+      <AuthProvider>
+        <div>
+          <BrowserRouter>
+            <AnimatedRoutes />
+          </BrowserRouter>
+        </div>
+      </AuthProvider>
   );
 }
 

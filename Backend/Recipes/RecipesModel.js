@@ -31,20 +31,21 @@ const recipeSchema = new mongoose.Schema(
       type: Number, // in minutes
       required: true,
     },
-    
+
     imageUrl: {
       type: String,
-      required:true,
-    },
-    category: {
-      type: String, 
       required: true,
     },
+    category: {
+      type: String,
+      required: true,
+    },
+    isLoved: {
+      type: Boolean,
+      default: false
+    }
   },
 );
 
-// const RecipesSchema = new mongoose.Schema({
-//   recipes: [recipeSchema]
-// })
 
 export default mongoose.model("Recipe", recipeSchema);

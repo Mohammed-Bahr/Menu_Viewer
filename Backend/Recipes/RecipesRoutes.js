@@ -77,19 +77,19 @@
 // export default router;
 
 
-
 import express from 'express';
 const router = express.Router();
 
 import mongoose from 'mongoose';
-import Recipe from '../Recipes/RecipesModel.js';
+import Recipe from './RecipesModel.js';
+
 
 export const findRecipeById = async (recipeId) => {
     try {
         console.log(`findRecipeById called with ID: ${recipeId}`);
         console.log(`ID type: ${typeof recipeId}`);
         console.log(`ID length: ${recipeId.length}`);
-        
+
         // Check if recipeId is provided
         if (!recipeId) {
             console.log('Recipe ID is missing');
@@ -99,7 +99,7 @@ export const findRecipeById = async (recipeId) => {
                 message: "Recipe ID is required"
             };
         }
-        
+
         // Check if the ID is valid
         if (!mongoose.Types.ObjectId.isValid(recipeId)) {
             console.log(`Invalid ObjectId format: ${recipeId}`);
@@ -109,11 +109,11 @@ export const findRecipeById = async (recipeId) => {
                 message: "Invalid recipe ID format"
             };
         }
-        
+
         // Try direct string search first
         console.log(`Trying direct string search with ID: ${recipeId}`);
         let recipe = await Recipe.findById(recipeId);
-        
+
         if (!recipe) {
             // If direct search fails, try with ObjectId conversion
             try {
@@ -124,7 +124,7 @@ export const findRecipeById = async (recipeId) => {
             } catch (idError) {
                 console.error(`Error converting ID to ObjectId: ${idError.message}`);
             }
-            
+
             // If still not found, try a more flexible query
             if (!recipe) {
                 console.log(`Trying flexible query with _id: ${recipeId}`);
@@ -134,7 +134,7 @@ export const findRecipeById = async (recipeId) => {
         } else {
             console.log('Recipe found with direct string search:', recipe);
         }
-        
+
         if (!recipe) {
             console.log(`No recipe found with ID: ${recipeId}`);
             return {
@@ -143,7 +143,7 @@ export const findRecipeById = async (recipeId) => {
                 message: "Recipe not found"
             };
         }
-        
+
         console.log(`Recipe found successfully: ${recipe._id}`);
         return {
             data: recipe,
@@ -159,6 +159,7 @@ export const findRecipeById = async (recipeId) => {
         };
     }
 }
+
 // CREATE RECIPE
 router.post("/", async (req, res) => {
     try {
@@ -201,7 +202,6 @@ router.get("/", async (req, res) => {
     try {
         const recipes = await Recipe.find();
 
-        // FIXED: Changed res.json(recipes).status(200) to res.status(200).json(recipes)
         res.status(200).json({
             success: true,
             count: recipes.length,
@@ -215,37 +215,58 @@ router.get("/", async (req, res) => {
     }
 });
 
-// GET RECIPE BY ID
-router.get("/:id", async (req, res) => {
-  const { id } = req.params;
+// GET ALL FAVOURITE RECIPES - MOVED BEFORE /:id route
+router.get("/filter/favourites", async (req, res) => {
+    try {
+        const recipes = await Recipe.find({ isLoved: true });
 
-  try {
-    console.log(`Searching for recipe with ID: ${id}`);
-    console.log(`Request params:`, req.params);
-    console.log(`ID from URL: ${req.originalUrl}`);
-    
-    // Make sure to await the function call since it's async
-    const result = await findRecipeById(id);
-    
-    // Log the result for debugging
-    console.log('findRecipeById result:', result);
-    
-    // Destructure the result after awaiting
-    const { data, status, message } = result;
-    
-    return res.status(status).json({
-      success: status === 200,
-      message: message,
-      data: data
-    });
-  } catch (error) {
-    console.error(`Error getting recipe by ID: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      message: `Server error: ${error.message}`
-    });
-  }
+        res.status(200).json({
+            success: true,
+            count: recipes.length,
+            data: recipes
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: `Error fetching favorite recipes: ${error.message}`
+        });
+    }
 });
+// GET RECIPE BY ID - MOVED AFTER /favourites route
+router.get("/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        console.log(`Searching for recipe with ID: ${id}`);
+        console.log(`Request params:`, req.params);
+        console.log(`ID from URL: ${req.originalUrl}`);
+
+        // Make sure to await the function call since it's async
+        const result = await findRecipeById(id);
+
+        // Log the result for debugging
+        console.log('findRecipeById result:', result);
+
+        // Destructure the result after awaiting
+        const { data, status, message } = result;
+
+        return res.status(status).json({
+            success: status === 200,
+            message: message,
+            data: data
+        });
+    } catch (error) {
+        console.error(`Error getting recipe by ID: ${error.message}`);
+        return res.status(500).json({
+            success: false,
+            message: `Server error: ${error.message}`
+        });
+    }
+});
+
+
+
+
 
 // UPDATE RECIPE
 router.put("/:id", async (req, res) => {

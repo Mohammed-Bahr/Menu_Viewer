@@ -51,6 +51,7 @@
 
 
 
+// import { set } from "mongoose";
 import { AuthContext } from "./AuthContext";
 import { useState, useEffect } from "react";
 import React from 'react';
@@ -162,7 +163,10 @@ const AuthProvider = ({ children }) => {
                     Password: password,
                 }),
             });
-
+            setFirstName(firstName);
+            setLastName(lastName);
+            setEmail(email);
+            setPassword(password);
             const data = await response.json();
             
             if (response.ok && data.success) {

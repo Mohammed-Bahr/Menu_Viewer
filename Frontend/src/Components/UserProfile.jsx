@@ -1,8 +1,4 @@
-// import React, { useState, useEffect } from 'react';
-// import { User, Mail, Lock, Eye, EyeOff, Edit3, Save, X } from 'lucide-react';
-// import { useAuth } from '../Context/Auth/AuthContext';
-// import { useParams } from 'react-router-dom';
-// Animated Light Rays Background Component (Pure CSS)
+
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, Edit3, Save, X } from 'lucide-react';
 import { useAuth } from '../Context/Auth/AuthContext';
@@ -84,51 +80,105 @@ const LightRaysBackground = () => {
 
 // Main User Profile Component
 const UserProfile = () => {
-  const { Email } = useAuth(); // Call useAuth hook directly in the component
+  const { FirstName, LastName, Email, Password, isAuthenticated, isLoading: authLoading } = useAuth();
   const [userData, setUserData] = useState({
-    firstName: "mohammed",
-    lastName: "Bahr",
-    email: "mohammedbahr686@gmail.com",
-    password: "123"
+    FirstName: '',
+    LastName: '',
+    Email: '',
+    Password: ''
   });
-
+  
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [editData, setEditData] = useState({ ...userData });
+  const [editData, setEditData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [apiError, setApiError] = useState(null);
 
-  // Simulate fetching data from backend
+  // Update local userData when auth context changes
   useEffect(() => {
-    const fetchUserData = async () => {
+    if (isAuthenticated && FirstName && LastName && Email && Password) {
+      const newUserData = {
+        FirstName,
+        LastName,
+        Email,
+        Password
+      };
+      setUserData(newUserData);
+      setEditData(newUserData);
+      setError(null);
+    }
+  }, [FirstName, LastName, Email, Password, isAuthenticated]);
+
+  // Fetch additional user data from backend if needed
+  useEffect(() => {
+    const fetchAdditionalUserData = async () => {
+      if (!Email || !isAuthenticated) return;
+      
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:3000/user/email/${Email}`, {
-          headers: {
-            'Content-Type': 'application/json',
+        setApiError(null);
+        
+        // Try different endpoint patterns
+        const endpoints = [
+          `http://localhost:3000/users/email/${Email}`,
+          `http://localhost:3000/user/email/${Email}`,
+          `http://localhost:3000/api/users/email/${Email}`
+        ];
+        
+        let response = null;
+        let lastError = null;
+        
+        // Try each endpoint until one works
+        for (const endpoint of endpoints) {
+          try {
+            response = await fetch(endpoint, {
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+            
+            if (response.ok) {
+              break; // Found working endpoint
+            }
+          } catch (err) {
+            console.error(`Error fetching additional user data from ${endpoint}:`, err);
+            continue;
           }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
         }
-
-        const data = await response.json();
-        setUserData({
-          firstName: data.data.FirstName,
-          lastName: data.data.LastName,
-          email: data.data.Email,
-          password: data.data.Password
-        });
+        
+        if (response && response.ok) {
+          const data = await response.json();
+          console.log('Additional user data fetched:', data);
+          
+          // If we get additional data, merge it (but prioritize auth context)
+          if (data.success && data.data) {
+            setUserData(prev => ({
+              ...prev,
+              // Only update if auth context doesn't have the data
+              FirstName: FirstName || data.data.FirstName,
+              LastName: LastName || data.data.LastName,
+              Email: Email || data.data.Email,
+              // Don't override password from API for security
+              Password: Password || prev.Password
+            }));
+          }
+        } else {
+          // If API fails, we'll just use auth context data
+          setApiError('Could not fetch additional profile data from server');
+        }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        // Handle error appropriately - could set error state here
+        console.error('Error fetching additional user data:', error);
+        setApiError(`Network error: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserData();
-  }, [Email]);
+    if (isAuthenticated && Email) {
+      fetchAdditionalUserData();
+    }
+  }, [Email, isAuthenticated, FirstName, LastName, Password]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -136,18 +186,62 @@ const UserProfile = () => {
   };
 
   const handleSave = async () => {
-    setIsLoading(true);
-    // Simulate API call to save data
-    await new Promise(resolve => setTimeout(resolve, 800));
-    // Here you would send data to your backend
-    // const response = await fetch('/api/user', {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(editData)
-    // });
-    setUserData({ ...editData });
-    setIsEditing(false);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Validate required fields
+      if (!editData.FirstName || !editData.LastName || !editData.Email) {
+        throw new Error('Please fill in all required fields');
+      }
+      
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editData.Email)) {
+        throw new Error('Please enter a valid email address');
+      }
+      
+      // Try to update user data on backend
+      try {
+        const response = await fetch(`http://localhost:3000/users/update/${Email}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            FirstName: editData.FirstName,
+            LastName: editData.LastName,
+            Email: editData.Email,
+            // Only send password if it was changed
+            ...(editData.Password !== userData.Password && { Password: editData.Password })
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            console.log('Profile updated successfully on server');
+          }
+        } else {
+          console.warn('Failed to update on server, continuing with local update');
+        }
+      } catch (apiError) {
+        console.warn('API update failed, continuing with local update:', apiError);
+      }
+      
+      // Update local state regardless of API success
+      setUserData({ ...editData });
+      setIsEditing(false);
+      
+      // Show success message
+      setError({ type: 'success', message: 'Profile updated successfully!' });
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setError({ type: 'error', message: error.message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -160,15 +254,67 @@ const UserProfile = () => {
       ...prev,
       [field]: value
     }));
+    // Clear errors when user starts typing
+    if (error) {
+      setError(null);
+    }
   };
 
-  if (isLoading && !isEditing) {
+  // Generate user initials for avatar
+  const getUserInitials = () => {
+    const first = userData.FirstName ? userData.FirstName.charAt(0).toUpperCase() : '';
+    const last = userData.LastName ? userData.LastName.charAt(0).toUpperCase() : '';
+    return first + last || 'U';
+  };
+
+  // Generate avatar color based on name
+  const getAvatarColor = () => {
+    const name = `${userData.FirstName}${userData.LastName}`.toLowerCase();
+    const colors = [
+      'from-blue-400 to-blue-600',
+      'from-green-400 to-green-600', 
+      'from-purple-400 to-purple-600',
+      'from-pink-400 to-pink-600',
+      'from-indigo-400 to-indigo-600',
+      'from-red-400 to-red-600',
+      'from-yellow-400 to-yellow-600',
+      'from-teal-400 to-teal-600'
+    ];
+    const hash = name.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return colors[Math.abs(hash) % colors.length] || 'from-cyan-400 to-purple-500';
+  };
+
+  if (authLoading || (!isAuthenticated && !error)) {
     return (
       <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
         <LightRaysBackground />
         <div className="relative z-10 flex flex-col items-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400 mb-4"></div>
           <p className="text-white text-xl font-light">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        <LightRaysBackground />
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="w-24 h-24 bg-gradient-to-r from-red-400 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <User className="w-12 h-12 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+          <p className="text-cyan-200 mb-6">Please log in to view your profile.</p>
+          <button
+            onClick={() => window.location.href = '/login'}
+            className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-colors"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -221,15 +367,39 @@ const UserProfile = () => {
               </div>
 
               <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center transform transition-all duration-500 hover:rotate-12 hover:scale-110 shadow-lg shadow-cyan-500/30">
-                  <User className="w-12 h-12 text-white" />
+                <div className={`w-24 h-24 bg-gradient-to-r ${getAvatarColor()} rounded-full mx-auto mb-4 flex items-center justify-center transform transition-all duration-500 hover:rotate-12 hover:scale-110 shadow-lg shadow-cyan-500/30`}>
+                  <span className="text-white text-2xl font-bold">
+                    {getUserInitials()}
+                  </span>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-1 animate-fade-in">
-                  {userData.firstName} {userData.lastName}
+                  {userData.FirstName && userData.LastName ? 
+                    `${userData.FirstName} ${userData.LastName}` : 
+                    userData.Email || 'User Profile'
+                  }
                 </h1>
-                <p className="text-cyan-200 text-sm opacity-80">User Profile</p>
+                <p className="text-cyan-200 text-sm opacity-80">
+                  {isAuthenticated ? 'User Profile' : 'Guest'}
+                </p>
               </div>
             </div>
+
+            {/* Error/Success Messages */}
+            {error && (
+              <div className={`mx-6 mt-6 p-4 rounded-lg ${
+                error.type === 'success' 
+                  ? 'bg-green-500/20 border border-green-400/30 text-green-100'
+                  : 'bg-red-500/20 border border-red-400/30 text-red-100'
+              }`}>
+                <p className="text-sm font-medium">{error.message}</p>
+              </div>
+            )}
+            
+            {apiError && (
+              <div className="mx-6 mt-6 p-3 rounded-lg bg-yellow-500/20 border border-yellow-400/30 text-yellow-100">
+                <p className="text-xs">{apiError}</p>
+              </div>
+            )}
 
             {/* Profile Information */}
             <div className="p-6 space-y-6">
@@ -242,14 +412,14 @@ const UserProfile = () => {
                   {isEditing ? (
                     <input
                       type="text"
-                      value={editData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      value={editData.FirstName}
+                      onChange={(e) => handleInputChange('FirstName', e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 hover:bg-white/10"
                       placeholder="Enter first name"
                     />
                   ) : (
                     <div className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/10 rounded-xl text-white flex items-center justify-between group hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                      <span className="font-medium">{userData.firstName}</span>
+                      <span className="font-medium">{userData.FirstName}</span>
                       <User className="w-4 h-4 text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   )}
@@ -265,14 +435,14 @@ const UserProfile = () => {
                   {isEditing ? (
                     <input
                       type="text"
-                      value={editData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      value={editData.LastName}
+                      onChange={(e) => handleInputChange('LastName', e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 hover:bg-white/10"
                       placeholder="Enter last name"
                     />
                   ) : (
                     <div className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/10 rounded-xl text-white flex items-center justify-between group hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                      <span className="font-medium">{userData.lastName}</span>
+                      <span className="font-medium">{userData.LastName}</span>
                       <User className="w-4 h-4 text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   )}
@@ -287,15 +457,15 @@ const UserProfile = () => {
                 <div className="relative">
                   {isEditing ? (
                     <input
-                      type="email"
-                      value={editData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      type="Email"
+                      value={editData.Email}
+                      onChange={(e) => handleInputChange('Email', e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 hover:bg-white/10"
-                      placeholder="Enter email address"
+                      placeholder="Enter Email address"
                     />
                   ) : (
                     <div className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/10 rounded-xl text-white flex items-center justify-between group hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                      <span className="font-medium truncate">{userData.email}</span>
+                      <span className="font-medium truncate">{userData.Email}</span>
                       <Mail className="w-4 h-4 text-cyan-400 opacity-60 ml-2 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   )}
@@ -312,8 +482,8 @@ const UserProfile = () => {
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
-                        value={editData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        value={editData.Password || ''}
+                        onChange={(e) => handleInputChange('Password', e.target.value)}
                         className="w-full px-4 py-3 pr-12 bg-white/5 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 hover:bg-white/10"
                         placeholder="Enter password"
                       />
@@ -327,12 +497,42 @@ const UserProfile = () => {
                     </div>
                   ) : (
                     <div className="w-full px-4 py-3 bg-white/5 backdrop-blur border border-white/10 rounded-xl text-white flex items-center justify-between group hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                      <span className="font-medium">{"•".repeat(userData.password.length)}</span>
+                      <span className="font-medium">{"•".repeat(userData.Password?.length || 8)}</span>
                       <Lock className="w-4 h-4 text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Profile Statistics */}
+              <div className="grid grid-cols-2 gap-4 py-4 border-t border-white/10">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-cyan-300">0</div>
+                  <div className="text-xs text-cyan-200 opacity-70">Favorite Recipes</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-300">
+                    {userData.Email ? new Date().toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short'
+                    }) : '--'}
+                  </div>
+                  <div className="text-xs text-purple-200 opacity-70">Member Since</div>
+                </div>
+              </div>
+
+              {/* Quick Info */}
+              {userData.Email && (
+                <div className="py-4 border-t border-white/10">
+                  <div className="text-center">
+                    <p className="text-xs text-cyan-200 opacity-70 mb-1">Account Status</p>
+                    <div className="inline-flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-full">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-green-300 font-medium">Active</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="pt-4">

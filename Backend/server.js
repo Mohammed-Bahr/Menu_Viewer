@@ -12,7 +12,6 @@ const port = 3000;
 
 
 app.use(cors());
-
 app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URL || 'mongodb://localhost:27017/Food_App')

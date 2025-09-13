@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, Users, Star, ChefHat, Search, Filter } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { Clock, Users, Star, ChefHat, Search, Filter, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Menu = () => {
@@ -9,7 +9,16 @@ const Menu = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('title');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const searchRef = useRef(null);
     const navigate = useNavigate();
+
+    // Debounce search term for performance
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearchTerm(searchTerm.trim()), 300);
+        return () => clearTimeout(t);
+    }, [searchTerm]);
+
     useEffect(() => {
         const fetchMenu = async () => {
             try {
@@ -162,22 +171,26 @@ const Menu = () => {
         fetchMenu();
     }, []);
 
-    // Get unique categories from recipes //all is a default category and first one at the set of categories
-    // 
-    const categories = ['all', ...new Set(recipes.map(recipe => recipe.category.toLowerCase()))];
-    // const categories = [...new Set(recipes.map(recipe => recipe.category?.toLowerCase()))].filter(Boolean);
-    // categories.push('all');
+    // Get unique categories from recipes
+    const categories = useMemo(() => {
+        const unique = [...new Set(recipes.map(r => r.category?.toLowerCase()).filter(Boolean))];
+        return ['all', ...unique];
+    }, [recipes]);
 
-    // Filter and sort recipes
-    const filteredAndSortedRecipes = recipes
-        .filter(recipe => {
+    // Filter and sort recipes (uses debounced search)
+    const filteredAndSortedRecipes = useMemo(() => {
+        const q = debouncedSearchTerm.toLowerCase();
+        const filtered = recipes.filter(recipe => {
             const matchesCategory = selectedCategory === 'all' ||
                 recipe.category?.toLowerCase() === selectedCategory.toLowerCase();
-            const matchesSearch = recipe.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                recipe.description?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = !q || (
+                recipe.title?.toLowerCase().includes(q) ||
+                recipe.description?.toLowerCase().includes(q) ||
+                recipe.ingredients?.some(ing => (ing || '').toLowerCase().includes(q))
+            );
             return matchesCategory && matchesSearch;
-        })
-        .sort((a, b) => {
+        });
+        return filtered.sort((a, b) => {
             switch (sortBy) {
                 case 'title':
                     return a.title?.localeCompare(b.title) || 0;
@@ -191,6 +204,7 @@ const Menu = () => {
                     return 0;
             }
         });
+    }, [recipes, debouncedSearchTerm, selectedCategory, sortBy]);
 
     if (loading) {
         return (
@@ -230,19 +244,30 @@ const Menu = () => {
                     </div>
                 )}
 
-                {/* Search and Filter Controls */}
+
+                {/* Search and Sort Controls */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
                     <div className="flex flex-col md:flex-row gap-4 items-center">
                         {/* Search */}
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
+                        <div className="relative flex-1 max-w-md" ref={searchRef}>
+                            <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4 z-10" />
                             <input
                                 type="text"
                                 placeholder="Search recipes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                aria-label="Search recipes"
                             />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 z-10"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
                         </div>
 
                         {/* Sort */}
@@ -252,6 +277,7 @@ const Menu = () => {
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                aria-label="Sort recipes"
                             >
                                 <option value="title">Sort by Name</option>
                                 <option value="cookingTime">Sort by Cooking Time</option>
@@ -269,8 +295,8 @@ const Menu = () => {
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${selectedCategory === category
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
                                 }`}
                         >
                             {category === 'all' ? 'All Recipes' : category.charAt(0).toUpperCase() + category.slice(1)}
@@ -282,11 +308,17 @@ const Menu = () => {
                 {filteredAndSortedRecipes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredAndSortedRecipes.map(recipe => (
-                            <div key={recipe._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <div
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    navigate(`/recipe/${recipe._id}`);
+                                }}
+                                key={recipe._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                                 <div className="h-48 bg-gray-200 relative">
                                     <img
                                         src={recipe.imageUrl || "https://via.placeholder.com/400x300?text=Recipe"}
                                         alt={recipe.title}
+                                        loading="lazy"
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
                                             e.target.src = "https://via.placeholder.com/400x300?text=Recipe";
