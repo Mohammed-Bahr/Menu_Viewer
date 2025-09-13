@@ -286,7 +286,7 @@ export default function Navbar() {
                     className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-200 transition"
                   >
                     <FavoriteBorderIcon size={18} />
-                    love {loveCount > 0 && `(${loveCount})`}
+                    
                   </button>
 
                   {/* Mobile Order Now */}

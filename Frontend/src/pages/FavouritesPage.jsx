@@ -269,7 +269,7 @@ const FavouritesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAndSortedFavorites.map((recipe) => (
               <div
-                onClick={() => navigate(`/recipes/${recipe._id}`)}
+                onClick={() => navigate(`/recipe/${recipe._id}`)}
                 role="button"
                 key={recipe._id}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
