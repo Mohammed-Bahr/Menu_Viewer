@@ -649,9 +649,7 @@ const RecipeDisplayPage = () => {
                       >
                         {/* Step Number - Enhanced design */}
                         <div className="flex-shrink-0 relative">
-                          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg group-hover:shadow-blue-200 group-hover:scale-105 transition-all duration-300">
-                            {typeof instruction === 'object' ? instruction.step : index + 1}
-                          </div>
+                         
                           {/* Connecting line for all steps except the last one */}
                           {index < recipe.instructions.length - 1 && (
                             <div className="absolute top-14 left-1/2 w-1 h-10 bg-gradient-to-b from-blue-400 to-blue-100 transform -translate-x-1/2"></div>
@@ -660,19 +658,9 @@ const RecipeDisplayPage = () => {
 
                         {/* Instruction Text - Enhanced design with better spacing and typography */}
                         <div className="flex-1 pt-1">
-                          <p className="text-gray-800 leading-relaxed text-lg group-hover:text-gray-900 transition-colors duration-300 break-words">
-                            {typeof instruction === 'object' ? instruction.text : instruction}
+                          <p className="text-gray-800 leading-relaxed text-lg group-hover:text-gray-900 transition-colors duration-300 break-words flex-row">
+                            {typeof instruction === 'object' ? instruction.step : instruction}
                           </p>
-
-                          {/* Optional: Add timing or difficulty indicators if available in your data */}
-                          {typeof instruction === 'object' && instruction.time && (
-                            <div className="mt-3 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full w-fit">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span className="font-medium">~{instruction.time} minutes</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     ))
