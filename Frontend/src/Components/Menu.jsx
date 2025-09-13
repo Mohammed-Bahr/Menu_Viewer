@@ -306,7 +306,7 @@ const Menu = () => {
 
                 {/* Recipe Grid */}
                 {filteredAndSortedRecipes.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="cursor-pointer grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredAndSortedRecipes.map(recipe => (
                             <div
                                 onClick={(e) => {

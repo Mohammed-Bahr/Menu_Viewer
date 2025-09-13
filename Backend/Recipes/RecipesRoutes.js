@@ -1,88 +1,9 @@
-// import express from 'express';
-// const router = express.Router();
-
-// import Recipe from '../recipes/RecipesModel.js';
-
-
-
-
-// const findRecipeById = async (recipeId) => {
-//     try {
-//         const recipe = await Recipe.findById(recipeId);
-//         if (!recipe) {
-//             return { 
-//                 data: null, 
-//                 status: 404, 
-//                 message: "Recipe not found" 
-//             };
-//         }
-//         return { 
-//             data: recipe, 
-//             status: 200,
-//             message: "Recipe found successfully"
-//         };
-//     } catch (error) {
-//         return { 
-//             data: null, 
-//             status: 500, 
-//             message: `Error finding recipe: ${error.message}` 
-//         };
-//     }
-// }
-
-
-
-// router.post("/", async (req, res) => {
-//   try {
-//     const { title, description, ingredients, instructions, cookingTime, imageUrl, category } = req.body;
-//     if (!title || !ingredients || !instructions || !cookingTime || !category) {
-//       return res.status(400).json({ message: "Please provide all required fields" });
-//     }
-//     const recipe = new Recipe({
-//       title,
-//       description,
-//       ingredients,
-//       instructions,
-//       cookingTime,
-//       imageUrl,
-//       category,
-//     })
-//     await recipe.save();
-//     res.status(201).json(recipe);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// });
-
-// router.get("/", async (req, res) => {
-//   try {
-//     const recipes = await Recipe.find();
-//     res.json(recipes).status(200);
-//   } catch (error) {
-//     res.status(500).json({ message:` that is the error cause -> ${error.message}` });
-//   }
-// });
-
-// router.get("/:id", async (req, res) => {
-//   const {id} = req.params;
-//   try {
-//     const { data, status } = findRecipeById(id);
-//     res.json({data}).status({status});
-//   } catch (error) {
-//     console.error(`Enter your id correctly -> ${error.message}`);
-//     res.status(500).json({ message: ` that is the error cause -> ${error.message}` });
-//   }
-// });
-
-// export default router;
-
-
-import express from 'express';
-const router = express.Router();
-
 import mongoose from 'mongoose';
+import express from 'express';
 import Recipe from './RecipesModel.js';
 
+
+const router = express.Router();
 
 export const findRecipeById = async (recipeId) => {
     try {

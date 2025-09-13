@@ -190,6 +190,7 @@ const AuthProvider = ({ children }) => {
         
         // Clear localStorage
         localStorage.removeItem("user");
+        localStorage.removeItem("userId");
     };
 
     // Helper functions

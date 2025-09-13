@@ -1,10 +1,8 @@
 import mongoose from "mongoose";
-import Recipe from "../recipes/RecipesModel.js";
 const favourtiesSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
-    recipes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' }] 
+    userId: { type: String, required: true , ref: 'User'},
+    recipes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' , required: true }] 
 });
 
 
-const Favourites = mongoose.model('Favourites', favourtiesSchema);
-export default Favourites;
+export default mongoose.model('Favourites', favourtiesSchema);

@@ -6,6 +6,7 @@ import express from "express";
 import recipesRoutes from './Recipes/RecipesRoutes.js';
 import cors from 'cors';
 import UserRoutes from './User/UserRoutes.js';
+import FavouritesRoutes from './Favourites/FavouritesRoutes.js';
 
 const app = express();
 const port = 3000;
@@ -29,6 +30,7 @@ app.get('/', (req, res) => {
 
 app.use('/recipes', recipesRoutes);
 app.use('/users',UserRoutes);
+app.use('/favourites' , FavouritesRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

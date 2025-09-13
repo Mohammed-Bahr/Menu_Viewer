@@ -30,8 +30,9 @@
 
 import React from "react";
 import { motion } from "framer-motion"; // Note: You'll need to install framer-motion
-
+import { useNavigate } from "react-router-dom";
 export default function HomePage() {
+const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
       <section className="container mx-auto px-4 md:px-20 py-16 flex flex-col md:flex-row justify-between items-center gap-10">
@@ -49,9 +50,11 @@ export default function HomePage() {
           <p className="text-lg text-gray-600 max-w-md">
             Discover the best foods from over 1,000 restaurants and fast delivery to your doorstep
           </p>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full 
+          <button
+          onClick={() => navigate("/menu")}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full 
             transition duration-300 ease-in-out transform hover:scale-105 shadow-lg">
-            Order Now
+            Discover Now
           </button>
         </motion.div>
 

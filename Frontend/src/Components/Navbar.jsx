@@ -135,15 +135,7 @@ export default function Navbar() {
                 }`}
             >
               <FavoriteBorderIcon size={20} />
-              {/* {loveCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                >
-                  {loveCount > 9 ? "9+" : loveCount}
-                </motion.span>
-              )} */}
+            
             </motion.button>
 
             {/* User Menu */}

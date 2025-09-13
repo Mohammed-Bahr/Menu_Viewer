@@ -9,6 +9,7 @@ const FavouritesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('title');
   const navigate = useNavigate();
+
   useEffect(() => {
     fetchFavorites();
   }, []);
@@ -16,8 +17,13 @@ const FavouritesPage = () => {
   const fetchFavorites = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/recipes/filter/favourites', {
-        method: 'GET',
+      const userId = localStorage.getItem('userId');
+
+      if (!userId) {
+        throw new Error('User not logged in. Please log in to view favorites.');
+      }
+
+      const response = await fetch(`http://localhost:3000/favourites/${userId}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -28,31 +34,18 @@ const FavouritesPage = () => {
       const data = await response.json();
       console.log('API Response:', data); // Log the response for debugging
 
-      // Handle different response formats
-      let favoritesData = [];
-
-      if (data && data.success === true && Array.isArray(data.data)) {
-        // Standard API response format with success flag and data array
-        favoritesData = data.data;
-      } else if (data && Array.isArray(data.data)) {
-        // API response with data property containing array
-        favoritesData = data.data;
-      } else if (Array.isArray(data)) {
-        // Direct array response
-        favoritesData = data;
-      } else {
-        // Unexpected format - log and use empty array
-        console.error('Unexpected API response format:', data);
-      }
+      // Backend returns: { success, count, data: { _id, userId, recipes: [recipeDocs] } }
+      const favoritesData = Array.isArray(data?.data?.recipes) ? data.data.recipes : [];
 
       // Ensure each recipe has required properties
-      const validatedFavorites = favoritesData.map(recipe => ({
+      const validatedFavorites = favoritesData.map((recipe) => ({
         ...recipe,
         title: recipe.title || 'Untitled Recipe',
         category: recipe.category || 'Uncategorized',
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
         cookingTime: recipe.cookingTime || 0,
-        imageUrl: recipe.imageUrl || ''
+        imageUrl: recipe.imageUrl || '',
+        isLoved: true
       }));
 
       setFavorites(validatedFavorites);
@@ -66,28 +59,33 @@ const FavouritesPage = () => {
   };
 
   const toggleFavorite = async (recipeId) => {
-    // Optimistic update
-    setFavorites(prevFavorites =>
-      prevFavorites.map(recipe =>
-        recipe._id === recipeId
-          ? { ...recipe, isLoved: !recipe.isLoved }
-          : recipe
-      )
-    );
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setError('User not logged in. Please log in to manage favorites.');
+      return;
+    }
+
+    // Optimistic update: remove the recipe from UI immediately
+    const previous = favorites;
+    setFavorites((prev) => prev.filter((r) => r._id !== recipeId));
 
     try {
-      // You might want to implement an API call to update the favorite status
-      // await fetch(`http://localhost:3000/recipes/${recipeId}/favorite`, { method: 'PATCH' });
+      const res = await fetch(`http://localhost:3000/favourites/${userId}/${recipeId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to remove from favorites');
+      }
+
+      const result = await res.json();
+      console.log('Removed from favorites:', result);
     } catch (err) {
       console.error('Failed to update favorite status:', err);
       // Revert optimistic update on error
-      setFavorites(prevFavorites =>
-        prevFavorites.map(recipe =>
-          recipe._id === recipeId
-            ? { ...recipe, isLoved: !recipe.isLoved }
-            : recipe
-        )
-      );
+      setFavorites(previous);
+      setError(err.message);
     }
   };
 
@@ -99,7 +97,7 @@ const FavouritesPage = () => {
     }
 
     // Filter recipes
-    const filtered = favorites.filter(recipe => {
+    const filtered = favorites.filter((recipe) => {
       // Check if recipe is a valid object
       if (!recipe || typeof recipe !== 'object') {
         return false;
@@ -147,12 +145,12 @@ const FavouritesPage = () => {
     }
 
     // Filter out recipes without a valid category
-    const validRecipes = favorites.filter(recipe =>
+    const validRecipes = favorites.filter((recipe) =>
       recipe && typeof recipe === 'object' && recipe.category && typeof recipe.category === 'string'
     );
 
     // Extract unique categories
-    return [...new Set(validRecipes.map(recipe => recipe.category))];
+    return [...new Set(validRecipes.map((recipe) => recipe.category))];
   })();
 
   if (loading) {
@@ -226,7 +224,7 @@ const FavouritesPage = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white"
               >
                 <option value="all">All Categories</option>
-                {categories.map(category => (
+                {categories.map((category) => (
                   <option key={category} value={category}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                   </option>
@@ -286,7 +284,7 @@ const FavouritesPage = () => {
                   />
                   {/* Heart Button */}
                   <button
-                    onClick={() => toggleFavorite(recipe._id)}
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(recipe._id); }}
                     className="absolute top-3 right-3 p-2 rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 transition-all duration-200 group"
                   >
                     <Heart

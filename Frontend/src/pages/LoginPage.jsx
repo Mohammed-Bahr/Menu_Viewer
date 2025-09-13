@@ -121,7 +121,7 @@ import React, { useRef, useState } from 'react';
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
-  import { useAuth } from '../Context/Auth/AuthContext';
+import { useAuth } from '../Context/Auth/AuthContext';
 const LoginPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -132,7 +132,7 @@ const LoginPage = () => {
   const passwordRef = useRef();
 
   const navigate = useNavigate();
-  const {login} = useAuth();
+  const { login } = useAuth();
 
   // function isValidEmail(email) {
   //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,66 +142,66 @@ const LoginPage = () => {
 
   function isValidEmail(email) {
     if (!email) {
-        return { isValid: false, error: "Email is required" };
+      return { isValid: false, error: "Email is required" };
     }
-    
+
     if (typeof email !== 'string') {
-        return { isValid: false, error: "Email must be a string" };
+      return { isValid: false, error: "Email must be a string" };
     }
 
     email = email.trim();
 
     if (email.length === 0) {
-        return { isValid: false, error: "Email cannot be empty" };
+      return { isValid: false, error: "Email cannot be empty" };
     }
 
     if (email.length > 254) {
-        return { isValid: false, error: "Email is too long (max 254 characters)" };
+      return { isValid: false, error: "Email is too long (max 254 characters)" };
     }
 
     if (!email.includes('@')) {
-        return { isValid: false, error: "Email must contain @ symbol" };
+      return { isValid: false, error: "Email must contain @ symbol" };
     }
 
     const atCount = (email.match(/@/g) || []).length;
     if (atCount !== 1) {
-        return { isValid: false, error: "Email must contain exactly one @ symbol" };
+      return { isValid: false, error: "Email must contain exactly one @ symbol" };
     }
 
     const [localPart, domainPart] = email.split('@');
 
     if (localPart.length === 0) {
-        return { isValid: false, error: "Email must have content before @" };
+      return { isValid: false, error: "Email must have content before @" };
     }
 
     if (localPart.length > 64) {
-        return { isValid: false, error: "Email local part is too long (max 64 characters)" };
+      return { isValid: false, error: "Email local part is too long (max 64 characters)" };
     }
 
     if (domainPart.length === 0) {
-        return { isValid: false, error: "Email must have domain after @" };
+      return { isValid: false, error: "Email must have domain after @" };
     }
 
     if (!domainPart.includes('.')) {
-        return { isValid: false, error: "Email domain must contain at least one dot" };
+      return { isValid: false, error: "Email domain must contain at least one dot" };
     }
 
     if (localPart.startsWith('.') || localPart.endsWith('.')) {
-        return { isValid: false, error: "Email cannot start or end with a dot before @" };
+      return { isValid: false, error: "Email cannot start or end with a dot before @" };
     }
 
     if (localPart.includes('..')) {
-        return { isValid: false, error: "Email cannot contain consecutive dots" };
+      return { isValid: false, error: "Email cannot contain consecutive dots" };
     }
 
     const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    
+
     if (!emailRegex.test(email)) {
-        return { isValid: false, error: "Email format is invalid" };
+      return { isValid: false, error: "Email format is invalid" };
     }
 
     return { isValid: true, error: null };
-}
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -233,7 +233,7 @@ const LoginPage = () => {
         const errorData = await response.json().catch(() => ({}));
         setError(
           errorData.data ||
-            `Unable to login user. Try different credentials. Status: ${response.status}`
+          `Unable to login user. Try different credentials. Status: ${response.status}`
         );
         setIsLoading(false);
         return;
@@ -244,23 +244,23 @@ const LoginPage = () => {
 
       setError("");
       setSuccess(true);
-      localStorage.setItem("user", JSON.stringify({ Email, Password }));
 
       setTimeout(() => {
         navigate("/home");
       }, 1500);
+      login(Email, Password);
+      localStorage.setItem("userId", data.data._id.toString());
     } catch (err) {
       console.error("Error while fetching data ->", err);
       setError(`Network error: ${err.message}`);
     }
     setIsLoading(false);
-    login(Email, Password);
   };
 
   // Animation variants
   const containerVariants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       scale: 0.8,
       y: 50
     },
@@ -319,7 +319,7 @@ const LoginPage = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       variants={backgroundVariants}
       animate="animate"
@@ -384,23 +384,23 @@ const LoginPage = () => {
         animate="visible"
       >
         {/* Glassmorphism Card */}
-        <motion.div 
+        <motion.div
           className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden"
-          whileHover={{ 
+          whileHover={{
             boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
             borderColor: "rgba(255, 255, 255, 0.3)"
           }}
           transition={{ duration: 0.3 }}
         >
           {/* Header */}
-          <motion.div 
+          <motion.div
             className="text-center mb-8"
             variants={itemVariants}
           >
-            <motion.div 
+            <motion.div
               className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full mb-6 shadow-lg"
-              whileHover={{ 
-                scale: 1.1, 
+              whileHover={{
+                scale: 1.1,
                 rotate: 360,
                 boxShadow: "0 20px 40px rgba(168, 85, 247, 0.4)"
               }}
@@ -408,7 +408,7 @@ const LoginPage = () => {
             >
               <LogIn className="w-10 h-10 text-white" />
             </motion.div>
-            <motion.h2 
+            <motion.h2
               className="text-4xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -416,7 +416,7 @@ const LoginPage = () => {
             >
               Welcome Back
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-white/70 text-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -440,7 +440,7 @@ const LoginPage = () => {
                   type="email"
                   placeholder="Enter your email"
                   className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-pink-400 focus:bg-white/20 transition-all duration-300 backdrop-blur-sm"
-                  whileFocus={{ 
+                  whileFocus={{
                     scale: 1.02,
                     borderColor: "#f472b6",
                     backgroundColor: "rgba(255, 255, 255, 0.15)"
@@ -462,7 +462,7 @@ const LoginPage = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="w-full pl-12 pr-12 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-pink-400 focus:bg-white/20 transition-all duration-300 backdrop-blur-sm"
-                  whileFocus={{ 
+                  whileFocus={{
                     scale: 1.02,
                     borderColor: "#f472b6",
                     backgroundColor: "rgba(255, 255, 255, 0.15)"
@@ -501,7 +501,7 @@ const LoginPage = () => {
               >
                 <CheckCircle className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm">Login successful! Redirecting...</span>
-              
+
               </motion.div>
             )}
 
@@ -511,12 +511,12 @@ const LoginPage = () => {
               disabled={isLoading}
               className="w-full py-4 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold rounded-xl shadow-lg hover:shadow-pink-500/25 focus:outline-none focus:ring-4 focus:ring-pink-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               variants={itemVariants}
-              whileHover={{ 
+              whileHover={{
                 scale: 1.02,
                 boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)"
               }}
               whileTap={{ scale: 0.98 }}
-              // disabled={isLoading}
+            // disabled={isLoading}
             >
               <motion.div
                 className="flex items-center justify-center space-x-3"
@@ -538,7 +538,7 @@ const LoginPage = () => {
                   </>
                 )}
               </motion.div>
-              
+
               {/* Button shine effect */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -554,8 +554,8 @@ const LoginPage = () => {
             </motion.button>
 
             {/* Additional Links */}
-            <motion.div 
-              variants={itemVariants} 
+            <motion.div
+              variants={itemVariants}
               className="text-center space-y-4 pt-4"
             >
               <p className="text-white/70">
