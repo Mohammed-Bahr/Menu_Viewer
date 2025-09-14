@@ -134,6 +134,7 @@ export default function Navbar() {
                   : "hover:bg-white/10 text-zinc-500"
                 }`}
             >
+               My Favourites
               <FavoriteBorderIcon size={20} />
             
             </motion.button>
@@ -277,7 +278,8 @@ export default function Navbar() {
                     onClick={handleLoveClick}
                     className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-200 transition"
                   >
-                    <FavoriteBorderIcon size={18} />
+                    My Favourites
+                    <FavoriteBorderIcon size={20} />
                     
                   </button>
 
